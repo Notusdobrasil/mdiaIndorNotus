@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> MídiaIndor - Notus do Brasil </title>
+    <style>
+        body { text-align: center; background: black; margin: 0; padding: 0; width: 100%; overflow: hidden; }
+        img { width: 80vw; height: 80vh; object-fit: contain; display: none; position: absolute; top: 50%; left:50%; transform: translate(-50%, -50%); max-width: 100%; max-height: 100%; object-fit: contain;}
+        button {
+            font-size: 24px;
+            padding: 10px 20px;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005f6a;
+        }
+    </style>
+    <script>
+        const folderId = "1x1ijPdg6i5Eg2Aa6xzu7INQTGIFxRU-Z"; // Substitua pelo ID correto da pasta do Google Drive
+        const apiKey = "AIzaSyBtSfNmYy8elnTJR-wV6qhv0TIPEKheFh0"; // Substitua por uma API Key válida
+
+        // Função para buscar as imagens
+        async function fetchImages() {
+            const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+(mimeType+contains+'image')&key=${apiKey}&fields=files(id,name,mimeType)`;
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (!data.files || data.files.length === 0) {
+                console.error("Nenhuma imagem encontrada ou erro na API");
+                return [];
+            }
+            
+            return data.files.map(file => `https://lh3.googleusercontent.com/d/${file.id}`);
+        }
+
+        // Função para iniciar o slideshow
+        async function startSlideshow() {
+            const images = await fetchImages();
+            if (images.length === 0) return;
+            let index = 0;
+            const imgElement = document.getElementById("slideshow");
+            imgElement.src = images[index];
+            imgElement.style.display = "block";
+            
+            setInterval(() => {
+                index = (index + 1) % images.length;
+                imgElement.src = images[index];
+            }, 8000); // Troca a cada 8 segundos
+        }
+
+        // Função para ativar o modo de tela cheia
+        function goFullScreen() {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.mozRequestFullScreen) { // Firefox
+                document.documentElement.mozRequestFullScreen();
+            } else if (document.documentElement.webkitRequestFullscreen) { // Chrome, Safari
+                document.documentElement.webkitRequestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) { // IE/Edge
+                document.documentElement.msRequestFullscreen();
+            }
+        }
+
+        // Espera o clique no botão para entrar em tela cheia
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('fullscreenButton').addEventListener('click', function() {
+                goFullScreen();
+            });
+
+            // Inicia o slideshow após a página ser carregada
+            startSlideshow();
+        });
+    </script>
+</head>
+<body>
+    <img id="slideshow" alt="Carregando imagens...">
+
+    <button id="fullscreenButton">Entrar em Tela Cheia</button>
+</body>
+</html>
