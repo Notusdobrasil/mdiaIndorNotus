@@ -26,27 +26,32 @@
     <script>
         const folderId = "1x1ijPdg6i5Eg2Aa6xzu7INQTGIFxRU-Z"; // Substitua pelo ID correto da pasta do Google Drive
         const apiKey = "AIzaSyBtSfNmYy8elnTJR-wV6qhv0TIPEKheFh0"; // Substitua por uma API Key válida
+        let images = [];
+        let index = 0;
+        let imgElement;
 
         // Função para buscar as imagens
         async function fetchImages() {
             const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+(mimeType+contains+'image')&key=${apiKey}&fields=files(id,name,mimeType)`;
-            const response = await fetch(url);
-            const data = await response.json();
-            
-            if (!data.files || data.files.length === 0) {
-                console.error("Nenhuma imagem encontrada ou erro na API");
-                return [];
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                if (!data.files || data.files.length === 0) {
+                    console.error("Nenhuma imagem encontrada ou erro na API");
+                    return [];
+                }
+                return data.files.map(file => `https://lh3.googleusercontent.com/d/${file.id}`);
+            } catch (error) {
+                console.error("Erro ao buscar imagens:", error);
+                return images;
             }
-            
-            return data.files.map(file => `https://lh3.googleusercontent.com/d/${file.id}`);
         }
 
         // Função para iniciar o slideshow
         async function startSlideshow() {
-            const images = await fetchImages();
+            images = await fetchImages();
             if (images.length === 0) return;
-            let index = 0;
-            const imgElement = document.getElementById("slideshow");
+            imgElement = document.getElementById("slideshow");
             imgElement.src = images[index];
             imgElement.style.display = "block";
             
@@ -54,6 +59,14 @@
                 index = (index + 1) % images.length;
                 imgElement.src = images[index];
             }, 8000); // Troca a cada 8 segundos
+
+            // Verifica por novas imagens a cada 30 segundos sem reiniciar o slideshow
+            setInterval(async () => {
+                const newImages = await fetchImages();
+                if (JSON.stringify(newImages) !== JSON.stringify(images)) {
+                    images = newImages;
+                }
+            }, 30000); // Verifica novas imagens a cada 30 segundos
         }
 
         // Função para ativar o modo de tela cheia
