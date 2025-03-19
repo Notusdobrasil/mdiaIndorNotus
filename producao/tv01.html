@@ -70,27 +70,18 @@
 
         // Função para iniciar o slideshow com transição suave
         async function startSlideshow() {
-            images = await fetchImages();
-            if (images.length === 0) return;
-            
-            imgElement = document.getElementById("slideshow");
-            imgElement.style.opacity = "0"; // Garante que começa invisível
+    images = await fetchImages();
+    if (images.length === 0) return;
+    
+    imgElement = document.getElementById("slideshow");
+    imgElement.style.opacity = "0"; // Garante que começa invisível
 
-            // Exibe a primeira imagem com fade-in
-            imgElement.src = images[index];
-            setTimeout(() => {
-                imgElement.style.opacity = "1";
-            }, 100); 
-
-            setInterval(() => {
-                imgElement.style.opacity = "0"; // Inicia fade-out
-                setTimeout(() => {
-                    index = (index + 1) % images.length; // Troca a imagem
-                    imgElement.src = images[index];
-                    imgElement.style.opacity = "1"; // Aplica fade-in
-                }, 1000); // Tempo para trocar a imagem (deve ser igual à transição no CSS)
-            }, 8000); // Troca a cada 8 segundos
-        }
+    // Exibe a primeira imagem com fade-in
+    imgElement.src = images[0]; // Carrega apenas a primeira imagem
+    setTimeout(() => {
+        imgElement.style.opacity = "1"; // Aplica fade-in
+    }, 100); 
+}
 
         // Função para ativar o modo de tela cheia na imagem
         function goFullScreen() {
