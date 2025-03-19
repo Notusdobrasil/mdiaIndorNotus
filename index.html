@@ -22,6 +22,13 @@
         button:hover {
             background-color: #005f6a;
         }
+
+        img {
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+}
+
     </style>
     <script>
         const folderId = "1x1ijPdg6i5Eg2Aa6xzu7INQTGIFxRU-Z"; // Substitua pelo ID correto da pasta do Google Drive
@@ -101,8 +108,35 @@
             startSlideshow();
         });
 
+        function verificarTelaCheia() {
+            const botao = document.getElementById("fullscreenButton");
+
+            if (document.fullscreenElement) {
+                botao.style.display = "none"; // Oculta o botão ao entrar em tela cheia
+            } else {
+                botao.style.display = "block"; // Mostra o botão ao sair da tela cheia
+            }
+        }
+
+        // Adiciona um ouvinte para detectar mudanças no modo tela cheia
+        document.addEventListener("fullscreenchange", verificarTelaCheia);
+
         function esconderBotao() {
-            document.getElementById("fullscreenButton").style.display = "none";
+            document.getElementById("fullscreenButton").style.display = "none"; // Oculta o botão ao clicar nele
+        }
+
+        function goFullScreen() {
+            let imgElement = document.getElementById("slideshow");
+
+            if (imgElement.requestFullscreen) {
+                imgElement.requestFullscreen();
+            } else if (imgElement.mozRequestFullScreen) { // Firefox
+                imgElement.mozRequestFullScreen();
+            } else if (imgElement.webkitRequestFullscreen) { // Chrome, Safari
+                imgElement.webkitRequestFullscreen();
+            } else if (imgElement.msRequestFullscreen) { // IE/Edge
+                imgElement.msRequestFullscreen();
+            }
         }
     </script>
 </head>
