@@ -100,11 +100,15 @@
             // Inicia o slideshow após a página ser carregada
             startSlideshow();
         });
+
+        function esconderBotao() {
+            document.getElementById("fullscreenButton").style.display = "none";
+        }
     </script>
 </head>
 <body>
     <img id="slideshow" alt="Carregando imagens...">
 
-    <button id="fullscreenButton">Entrar em Tela Cheia</button>
+    <button id="fullscreenButton" onclick="esconderBotao()">Entrar em Tela Cheia</button>
 </body>
 </html>
