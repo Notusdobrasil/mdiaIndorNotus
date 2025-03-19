@@ -6,7 +6,21 @@
     <title> MídiaIndor - Notus do Brasil </title>
     <style>
         body { text-align: center; background: black; margin: 0; padding: 0; width: 100%; overflow: hidden; }
-        img { width: 80vw; height: 80vh; object-fit: contain; display: none; position: absolute; top: 50%; left:50%; transform: translate(-50%, -50%); max-width: 100%; max-height: 100%; object-fit: contain;}
+        
+        img {
+            width: 100vw;
+            height: 100vh;
+            object-fit: contain; /* Garante que a imagem inteira seja exibida sem cortes */
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: opacity 1s ease-in-out; /* Efeito de transição suave */
+            opacity: 0; /* Começa invisível */
+            background-color: black; /* Adiciona um fundo para imagens menores */
+        }
+
         button {
             font-size: 24px;
             padding: 10px 20px;
@@ -19,17 +33,17 @@
             border: none;
             cursor: pointer;
         }
+
         button:hover {
             background-color: #005f6a;
         }
-
-        img {
-        width: 100vw;
-        height: 100vh;
-        object-fit: cover;
-}
-
     </style>
+</head>
+<body>
+
+    <img id="slideshow" alt="Carregando imagens...">
+    <button id="fullscreenButton" onclick="esconderBotao()">Entrar em Tela Cheia</button>
+
     <script>
         const folderId = "1x1ijPdg6i5Eg2Aa6xzu7INQTGIFxRU-Z"; // Substitua pelo ID correto da pasta do Google Drive
         const apiKey = "AIzaSyBtSfNmYy8elnTJR-wV6qhv0TIPEKheFh0"; // Substitua por uma API Key válida
@@ -37,7 +51,7 @@
         let index = 0;
         let imgElement;
 
-        // Função para buscar as imagens
+        // Função para buscar as imagens do Google Drive
         async function fetchImages() {
             const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType contains 'image'&key=${apiKey}&fields=files(id,name,mimeType)`;
             try {
@@ -54,77 +68,31 @@
             }
         }
 
-        // Função para iniciar o slideshow
+        // Função para iniciar o slideshow com transição suave
         async function startSlideshow() {
             images = await fetchImages();
             if (images.length === 0) return;
-            imgElement = document.getElementById("slideshow");
-            imgElement.src = images[index];
-            imgElement.style.display = "block";
             
+            imgElement = document.getElementById("slideshow");
+            imgElement.style.opacity = "0"; // Garante que começa invisível
+
+            // Exibe a primeira imagem com fade-in
+            imgElement.src = images[index];
+            setTimeout(() => {
+                imgElement.style.opacity = "1";
+            }, 100); 
+
             setInterval(() => {
-                index = (index + 1) % images.length;
-                imgElement.src = images[index];
+                imgElement.style.opacity = "0"; // Inicia fade-out
+                setTimeout(() => {
+                    index = (index + 1) % images.length; // Troca a imagem
+                    imgElement.src = images[index];
+                    imgElement.style.opacity = "1"; // Aplica fade-in
+                }, 1000); // Tempo para trocar a imagem (deve ser igual à transição no CSS)
             }, 8000); // Troca a cada 8 segundos
-
-            // Verifica por novas imagens a cada 30 segundos e recarrega a página se houver mudanças
-            setInterval(async () => {
-                const newImages = await fetchImages();
-                if (JSON.stringify(newImages) !== JSON.stringify(images)) {
-                    location.reload();
-                    setInterval(async () => {
-    const newImages = await fetchImages();
-    if (JSON.stringify(newImages) !== JSON.stringify(images)) {
-        images = newImages;
-        index = 0;
-        imgElement.src = images[index];
-    }
-}, 30000); // Verifica novas imagens a cada 30 segundos
-
-                }
-            }, 30000); // Verifica novas imagens a cada 30 segundos
         }
 
-        // Função para ativar o modo de tela cheia
-        function goFullScreen() {
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
-            } else if (document.documentElement.mozRequestFullScreen) { // Firefox
-                document.documentElement.mozRequestFullScreen();
-            } else if (document.documentElement.webkitRequestFullscreen) { // Chrome, Safari
-                document.documentElement.webkitRequestFullscreen();
-            } else if (document.documentElement.msRequestFullscreen) { // IE/Edge
-                document.documentElement.msRequestFullscreen();
-            }
-        }
-
-        // Espera o clique no botão para entrar em tela cheia
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('fullscreenButton').addEventListener('click', function() {
-                goFullScreen();
-            });
-
-            // Inicia o slideshow após a página ser carregada
-            startSlideshow();
-        });
-
-        function verificarTelaCheia() {
-            const botao = document.getElementById("fullscreenButton");
-
-            if (document.fullscreenElement) {
-                botao.style.display = "none"; // Oculta o botão ao entrar em tela cheia
-            } else {
-                botao.style.display = "block"; // Mostra o botão ao sair da tela cheia
-            }
-        }
-
-        // Adiciona um ouvinte para detectar mudanças no modo tela cheia
-        document.addEventListener("fullscreenchange", verificarTelaCheia);
-
-        function esconderBotao() {
-            document.getElementById("fullscreenButton").style.display = "none"; // Oculta o botão ao clicar nele
-        }
-
+        // Função para ativar o modo de tela cheia na imagem
         function goFullScreen() {
             let imgElement = document.getElementById("slideshow");
 
@@ -138,11 +106,38 @@
                 imgElement.msRequestFullscreen();
             }
         }
-    </script>
-</head>
-<body>
-    <img id="slideshow" alt="Carregando imagens...">
 
-    <button id="fullscreenButton" onclick="esconderBotao()">Entrar em Tela Cheia</button>
+        // Esconde o botão quando for clicado
+        function esconderBotao() {
+            document.getElementById("fullscreenButton").style.display = "none";
+            goFullScreen();
+        }
+
+        // Verifica se a tela está cheia e oculta o botão
+        function verificarTelaCheia() {
+            const botao = document.getElementById("fullscreenButton");
+
+            if (document.fullscreenElement) {
+                botao.style.display = "none"; // Oculta o botão ao entrar em tela cheia
+            } else {
+                botao.style.display = "block"; // Mostra o botão ao sair da tela cheia
+            }
+        }
+
+        // Adiciona um evento para monitorar mudanças na tela cheia
+        document.addEventListener("fullscreenchange", verificarTelaCheia);
+
+        // Espera o clique no botão para entrar em tela cheia e inicia o slideshow
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('fullscreenButton').addEventListener('click', function() {
+                goFullScreen();
+            });
+
+            // Inicia o slideshow após a página ser carregada
+            startSlideshow();
+        });
+
+    </script>
+
 </body>
 </html>
