@@ -60,11 +60,11 @@
                 imgElement.src = images[index];
             }, 8000); // Troca a cada 8 segundos
 
-            // Verifica por novas imagens a cada 30 segundos sem reiniciar o slideshow
+            // Verifica por novas imagens a cada 30 segundos e recarrega a página se houver mudanças
             setInterval(async () => {
                 const newImages = await fetchImages();
                 if (JSON.stringify(newImages) !== JSON.stringify(images)) {
-                    images = newImages;
+                    location.reload();
                 }
             }, 30000); // Verifica novas imagens a cada 30 segundos
         }
