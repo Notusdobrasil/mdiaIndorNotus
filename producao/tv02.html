@@ -117,7 +117,7 @@
                         console.error("Erro ao carregar a imagem:", imgElement.src);
                         imgElement.src = "https://via.placeholder.com/1920x1080?text=Erro+ao+Carregar+Imagem";
                     };
-                    setTimeout(showNextMedia, 8000); // Depois de 8 segundos, muda para o próximo
+                    setTimeout(showNextMedia, 200000); // Depois de 8 segundos, muda para o próximo
                 } else {
                     videoElement.src = media.url;
                     videoElement.style.display = "block";
