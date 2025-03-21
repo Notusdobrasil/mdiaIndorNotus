@@ -11,7 +11,7 @@
             width: 100vw;
             height: 100vh;
             object-fit: contain;
-            display: none;
+            display: block;
             position: absolute;
             top: 50%;
             left: 50%;
@@ -19,6 +19,7 @@
             background-color: black;
             opacity: 0;
             transition: opacity 1s ease-in-out;
+            visibility: hidden; /* Inicialmente escondido */
         }
 
         #fullscreenBtn {
@@ -53,7 +54,7 @@
 
         // Função para buscar imagens do Google Drive
         async function fetchImagesFromDrive() {
-            const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType contains 'image'&key=${apiKey}&fields=files(id,name)`;
+            const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType contains 'image'&key=${apiKey}&fields=files(id,name)`; 
             try {
                 const response = await fetch(url);
                 const data = await response.json();
@@ -86,9 +87,14 @@
             imgElement.style.opacity = 0;
             videoElement.style.opacity = 0;
 
+            // Esconde os elementos antes de mudar o conteúdo
+            imgElement.style.visibility = 'hidden';
+            videoElement.style.visibility = 'hidden';
+
             setTimeout(() => {
-                imgElement.style.display = "none";
-                videoElement.style.display = "none";
+                // Reseta os displays após a transição
+                imgElement.style.visibility = 'visible';
+                videoElement.style.visibility = 'visible';
 
                 if (mediaFiles.length === 0) {
                     alert("Nenhuma mídia disponível.");
@@ -121,7 +127,7 @@
 
                     videoElement.onended = function() {
                         console.log("Vídeo terminou, mudando para a próxima mídia");
-                        setTimeout(showNextMedia, 1000); // Espera 1 segundo e avança para a próxima imagem
+                        setTimeout(showNextMedia, 500); // Espera 1 segundo e avança para a próxima imagem
                     };
 
                 }
