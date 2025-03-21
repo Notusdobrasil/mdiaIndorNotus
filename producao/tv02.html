@@ -49,7 +49,9 @@
         const apiKey = "AIzaSyBtSfNmYy8elnTJR-wV6qhv0TIPEKheFh0";
         let mediaFiles = [];
         let index = 0;
+        const videoFile = "video01.mp4"; // Caminho do vídeo local
 
+        // Função para buscar imagens do Google Drive
         async function fetchImagesFromDrive() {
             const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType contains 'image'&key=${apiKey}&fields=files(id,name)`;
             try {
@@ -62,33 +64,21 @@
                     return;
                 }
 
+                // Adiciona somente as imagens à lista
                 mediaFiles = data.files.sort((a, b) => a.name.localeCompare(b.name)).map(file => ({
                     url: `https://lh3.googleusercontent.com/d/${file.id}=w1920-h1080`,
                     type: "image"
                 }));
 
-                // Caminho do vídeo local
-                let updatedMediaFiles = [];
-                for (let i = 0; i < mediaFiles.length; i++) {
-                    updatedMediaFiles.push(mediaFiles[i]);
-                    if (i < mediaFiles.length - 1) {
-                        updatedMediaFiles.push({
-                            url: "video01.mp4",  // Caminho do vídeo local
-                            type: "video"
-                        });
-                    }
-                }
-
-                mediaFiles = updatedMediaFiles;
-
                 console.log("Mídias carregadas:", mediaFiles);
-                startSlideshow();
+                startSlideshow(); // Inicia o slideshow das imagens
             } catch (error) {
                 console.error("Erro ao buscar imagens do Google Drive:", error);
                 alert("Erro ao buscar imagens. Veja o console para detalhes.");
             }
         }
 
+        // Função para exibir a próxima mídia (imagem ou vídeo)
         function showNextMedia() {
             const imgElement = document.getElementById("slideshow");
             const videoElement = document.getElementById("videoPlayer");
@@ -107,36 +97,44 @@
 
                 const media = mediaFiles[index];
                 console.log("Exibindo mídia:", media);
-                index = (index + 1) % mediaFiles.length;
+                index = (index + 1) % mediaFiles.length; // Avança para o próximo índice
 
+                // Exibe imagem
                 if (media.type === "image") {
                     imgElement.src = media.url;
                     imgElement.style.display = "block";
-                    imgElement.onload = () => imgElement.style.opacity = 1;
+                    imgElement.onload = function() {
+                        imgElement.style.opacity = 1;
+                    };
                     imgElement.onerror = function() {
                         console.error("Erro ao carregar a imagem:", imgElement.src);
                         imgElement.src = "https://via.placeholder.com/1920x1080?text=Erro+ao+Carregar+Imagem";
                     };
-                    setTimeout(showNextMedia, 200000); // Depois de 8 segundos, muda para o próximo
-                } else {
-                    videoElement.src = media.url;
-                    videoElement.style.display = "block";
-                    videoElement.style.opacity = 1;
-                    videoElement.play();
-                    videoElement.onended = () => {
+
+                    setTimeout(() => {
+                        // Exibe o vídeo após a imagem
+                        videoElement.src = videoFile;
+                        videoElement.style.display = "block";
+                        videoElement.style.opacity = 1;
+                        videoElement.play();
+                    }, 8000); // Espera 8 segundos (tempo da imagem) para iniciar o vídeo
+
+                    videoElement.onended = function() {
                         console.log("Vídeo terminou, mudando para a próxima mídia");
-                        setTimeout(showNextMedia, 1000); // Espera 1 segundo e avança para a próxima mídia
+                        setTimeout(showNextMedia, 60000); // Espera 1 segundo e avança para a próxima imagem
                     };
+
                 }
             }, 1000);
         }
 
+        // Função para iniciar o slideshow
         function startSlideshow() {
             if (mediaFiles.length === 0) {
                 alert("Nenhuma mídia para exibir.");
                 return;
             }
-            showNextMedia();
+            showNextMedia(); // Exibe a primeira mídia (imagem)
         }
 
         // Função para ativar/desativar a tela cheia
@@ -171,6 +169,7 @@
         // Evento de clique no botão de tela cheia
         document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
 
+        // Inicializa o código quando o conteúdo for carregado
         document.addEventListener('DOMContentLoaded', async function() {
             await fetchImagesFromDrive();
         });
