@@ -117,11 +117,11 @@
                         videoElement.style.display = "block";
                         videoElement.style.opacity = 1;
                         videoElement.play();
-                    }, 8000); // Espera 8 segundos (tempo da imagem) para iniciar o vídeo
+                    }, 60000); // Espera 8 segundos (tempo da imagem) para iniciar o vídeo
 
                     videoElement.onended = function() {
                         console.log("Vídeo terminou, mudando para a próxima mídia");
-                        setTimeout(showNextMedia, 60000); // Espera 1 segundo e avança para a próxima imagem
+                        setTimeout(showNextMedia, 1000); // Espera 1 segundo e avança para a próxima imagem
                     };
 
                 }
