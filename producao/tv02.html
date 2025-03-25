@@ -3,117 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MídiaIndor - Notus do Brasil</title>
+    <title> MídiaIndor - Notus do Brasil </title>
     <style>
         body { text-align: center; background: black; margin: 0; padding: 0; width: 100%; overflow: hidden; }
         
-        img {
-            width: auto;
-            height: auto;
-            max-width: 100vw;
-            max-height: 100vh;
+        img, video {
+            width: 100vw;
+            height: 100vh;
             object-fit: contain;
             display: block;
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            transition: opacity 1s ease-in-out;
-            opacity: 0;
             background-color: black;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            visibility: hidden; /* Inicialmente escondido */
         }
 
-        button {
-            font-size: 24px;
-            padding: 10px 20px;
+        #fullscreenBtn {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 1000;
-            background-color: #008CBA;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
             color: white;
             border: none;
+            padding: 10px 15px;
+            font-size: 16px;
             cursor: pointer;
+            z-index: 10;
         }
 
-        button:hover {
-            background-color: #005f6a;
+        #fullscreenBtn.hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
+    <button id="fullscreenBtn">Tela Cheia</button>
     <img id="slideshow" alt="Carregando imagens...">
-    <button id="fullscreenButton" onclick="esconderBotao()">Entrar em Tela Cheia</button>
+    <video id="videoPlayer" autoplay muted></video>
 
     <script>
-        const folderId = "1x1ijPdg6i5Eg2Aa6xzu7INQTGIFxRU-Z";
+        const folderId = "1jZAqqzqsMtF5mevdEXnA6t4pyQAP1g0q";
         const apiKey = "AIzaSyBtSfNmYy8elnTJR-wV6qhv0TIPEKheFh0";
-        let images = [];
+        let mediaFiles = [];
         let index = 0;
-        let imgElement;
+        const videoFile = "video01.mp4"; // Caminho do vídeo local
 
-        async function fetchImages() {
-            const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType contains 'image'&key=${apiKey}&fields=files(id,name,mimeType)`;
+        // Função para buscar imagens do Google Drive
+        async function fetchImagesFromDrive() {
+            const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType contains 'image'&key=${apiKey}&fields=files(id,name)`; 
             try {
                 const response = await fetch(url);
                 const data = await response.json();
+                console.log("Resposta da API do Drive:", data);
+
                 if (!data.files || data.files.length === 0) {
-                    console.error("Nenhuma imagem encontrada");
-                    return [];
+                    alert("Nenhuma imagem encontrada no Google Drive.");
+                    return;
                 }
-                return data.files.map(file => `https://lh3.googleusercontent.com/d/${file.id}=s4000`); // Carregando em alta resolução
+
+                // Adiciona somente as imagens à lista
+                mediaFiles = data.files.sort((a, b) => a.name.localeCompare(b.name)).map(file => ({
+                    url: `https://lh3.googleusercontent.com/d/${file.id}=w1920-h1080`,
+                    type: "image"
+                }));
+
+                console.log("Mídias carregadas:", mediaFiles);
+                startSlideshow(); // Inicia o slideshow das imagens
             } catch (error) {
-                console.error("Erro ao buscar imagens:", error);
-                return images;
+                console.error("Erro ao buscar imagens do Google Drive:", error);
+                alert("Erro ao buscar imagens. Veja o console para detalhes.");
             }
         }
 
-        async function startSlideshow() {
-            images = await fetchImages();
-            if (images.length === 0) return;
-            
-            imgElement = document.getElementById("slideshow");
-            imgElement.style.opacity = "0";
-            imgElement.src = images[0];
-            imgElement.onload = function() {
-                imgElement.style.opacity = "1";
-            };
+        // Função para exibir a próxima mídia (imagem ou vídeo)
+        function showNextMedia() {
+            const imgElement = document.getElementById("slideshow");
+            const videoElement = document.getElementById("videoPlayer");
+
+            imgElement.style.opacity = 0;
+            videoElement.style.opacity = 0;
+
+            // Esconde os elementos antes de mudar o conteúdo
+            imgElement.style.visibility = 'hidden';
+            videoElement.style.visibility = 'hidden';
+
+            setTimeout(() => {
+                // Reseta os displays após a transição
+                imgElement.style.visibility = 'visible';
+                videoElement.style.visibility = 'visible';
+
+                if (mediaFiles.length === 0) {
+                    alert("Nenhuma mídia disponível.");
+                    return;
+                }
+
+                const media = mediaFiles[index];
+                console.log("Exibindo mídia:", media);
+                index = (index + 1) % mediaFiles.length; // Avança para o próximo índice
+
+                // Exibe imagem
+                if (media.type === "image") {
+                    imgElement.src = media.url;
+                    imgElement.style.display = "block";
+                    imgElement.onload = function() {
+                        imgElement.style.opacity = 1;
+                    };
+                    imgElement.onerror = function() {
+                        console.error("Erro ao carregar a imagem:", imgElement.src);
+                        imgElement.src = "https://via.placeholder.com/1920x1080?text=Erro+ao+Carregar+Imagem";
+                    };
+
+                    setTimeout(() => {
+                        // Exibe o vídeo após a imagem
+                        videoElement.src = videoFile;
+                        videoElement.style.display = "block";
+                        videoElement.style.opacity = 1;
+                        videoElement.play();
+                    }, 60000); // Espera 8 segundos (tempo da imagem) para iniciar o vídeo
+
+                    videoElement.onended = function() {
+                        console.log("Vídeo terminou, mudando para a próxima mídia");
+                        setTimeout(showNextMedia, 500); // Espera 1 segundo e avança para a próxima imagem
+                    };
+
+                }
+            }, 1000);
         }
 
-        function goFullScreen() {
-            let imgElement = document.getElementById("slideshow");
-            if (imgElement.requestFullscreen) {
-                imgElement.requestFullscreen();
-            } else if (imgElement.mozRequestFullScreen) {
-                imgElement.mozRequestFullScreen();
-            } else if (imgElement.webkitRequestFullscreen) {
-                imgElement.webkitRequestFullscreen();
-            } else if (imgElement.msRequestFullscreen) {
-                imgElement.msRequestFullscreen();
+        // Função para iniciar o slideshow
+        function startSlideshow() {
+            if (mediaFiles.length === 0) {
+                alert("Nenhuma mídia para exibir.");
+                return;
             }
+            showNextMedia(); // Exibe a primeira mídia (imagem)
         }
 
-        function esconderBotao() {
-            document.getElementById("fullscreenButton").style.display = "none";
-            goFullScreen();
-        }
+        // Função para ativar/desativar a tela cheia
+        function toggleFullscreen() {
+            const elem = document.documentElement; // Obtém o elemento da tela
 
-        function verificarTelaCheia() {
-            const botao = document.getElementById("fullscreenButton");
-            if (document.fullscreenElement) {
-                botao.style.display = "none";
+            if (!document.fullscreenElement) {
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.mozRequestFullScreen) { // Firefox
+                    elem.mozRequestFullScreen();
+                } else if (elem.webkitRequestFullscreen) { // Chrome, Safari e Opera
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { // IE/Edge
+                    elem.msRequestFullscreen();
+                }
+                document.getElementById('fullscreenBtn').classList.add('hidden'); // Esconde o botão
             } else {
-                botao.style.display = "block";
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) { // Firefox
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) { // Chrome, Safari e Opera
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { // IE/Edge
+                    document.msExitFullscreen();
+                }
+                document.getElementById('fullscreenBtn').classList.remove('hidden'); // Mostra o botão
             }
         }
 
-        document.addEventListener("fullscreenchange", verificarTelaCheia);
+        // Evento de clique no botão de tela cheia
+        document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
 
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('fullscreenButton').addEventListener('click', function() {
-                goFullScreen();
-            });
-            startSlideshow();
+        // Inicializa o código quando o conteúdo for carregado
+        document.addEventListener('DOMContentLoaded', async function() {
+            await fetchImagesFromDrive();
         });
     </script>
 </body>
