@@ -48,36 +48,32 @@
     <script>
         const folderId = "10x41n2T2gt1mVcXW7Pm5F6R61vH5F9hu";
         const apiKey = "AIzaSyBtSfNmYy8elnTJR-wV6qhv0TIPEKheFh0";
-        let mediaFiles = [];
-        let index = 0;
+        let imageFiles = [];
+        let imageIndex = 0;
+        let mediaIndex = 0;
     
-        // Lista de vídeos locais
-        const videoFiles = ["video01.mp4", "video02.mp4", "video03.mp4"]; // Adicione mais vídeos conforme necessário
+        // Lista fixa de vídeos
+        const videoFiles = ["video01.mp4", "video02.mp4"];
+        let videoIndex = 0;
     
         async function fetchImagesFromDrive() {
             const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType contains 'image'&key=${apiKey}&fields=files(id,name)`;
             try {
                 const response = await fetch(url);
                 const data = await response.json();
-                console.log("Resposta da API do Drive:", data);
     
                 if (!data.files || data.files.length === 0) {
                     alert("Nenhuma imagem encontrada no Google Drive.");
                     return;
                 }
     
-                // Adiciona imagens na lista de mídias
-                mediaFiles = data.files.sort((a, b) => a.name.localeCompare(b.name)).map(file => ({
+                // Ordena as imagens para manter a sequência correta
+                imageFiles = data.files.sort((a, b) => a.name.localeCompare(b.name)).map(file => ({
                     url: `https://lh3.googleusercontent.com/d/${file.id}=w1920-h1080`,
                     type: "image"
                 }));
     
-                // Adiciona vídeos locais na lista de mídias
-                videoFiles.forEach(video => {
-                    mediaFiles.push({ url: video, type: "video" });
-                });
-    
-                console.log("Mídias carregadas:", mediaFiles);
+                console.log("Imagens carregadas:", imageFiles);
                 startSlideshow();
             } catch (error) {
                 console.error("Erro ao buscar imagens do Google Drive:", error);
@@ -91,7 +87,6 @@
     
             imgElement.style.opacity = 0;
             videoElement.style.opacity = 0;
-    
             imgElement.style.visibility = 'hidden';
             videoElement.style.visibility = 'hidden';
     
@@ -99,17 +94,17 @@
                 imgElement.style.visibility = 'visible';
                 videoElement.style.visibility = 'visible';
     
-                if (mediaFiles.length === 0) {
-                    alert("Nenhuma mídia disponível.");
-                    return;
-                }
+                if (mediaIndex % 2 === 0) {
+                    // **Exibir uma imagem**
+                    if (imageFiles.length === 0) {
+                        console.warn("Nenhuma imagem carregada.");
+                        return;
+                    }
     
-                const media = mediaFiles[index];
-                console.log("Exibindo mídia:", media);
-                index = (index + 1) % mediaFiles.length;
+                    const currentImage = imageFiles[imageIndex];
+                    imageIndex = (imageIndex + 1) % imageFiles.length;
     
-                if (media.type === "image") {
-                    imgElement.src = media.url;
+                    imgElement.src = currentImage.url;
                     imgElement.style.display = "block";
                     imgElement.onload = () => imgElement.style.opacity = 1;
                     imgElement.onerror = () => {
@@ -118,14 +113,28 @@
                     };
                     videoElement.style.display = "none";
     
-                    setTimeout(showNextMedia, 60000); // Troca após 5 segundos
+                    setTimeout(showNextMedia, 60000); // Exibe a imagem por 60 segundos
     
-                } else if (media.type === "video") {
-                    videoElement.src = media.url;
+                } else {
+                    // **Exibir um vídeo**
+                    if (videoFiles.length === 0) {
+                        console.warn("Nenhum vídeo carregado.");
+                        return;
+                    }
+    
+                    const currentVideo = videoFiles[videoIndex];
+                    videoIndex = (videoIndex + 1) % videoFiles.length;
+    
+                    videoElement.src = currentVideo;
                     videoElement.style.display = "block";
                     imgElement.style.display = "none";
                     videoElement.style.opacity = 1;
-                    videoElement.play();
+    
+                    // Adicionado para garantir que o vídeo comece a tocar
+                    videoElement.load();
+                    videoElement.play().catch(error => {
+                        console.error("Erro ao tentar reproduzir o vídeo:", error);
+                    });
     
                     videoElement.onended = () => {
                         console.log("Vídeo terminou, avançando para a próxima mídia.");
@@ -133,18 +142,19 @@
                     };
                 }
     
+                mediaIndex = (mediaIndex + 1) % (imageFiles.length * 2);
             }, 1000);
         }
     
         function startSlideshow() {
-            if (mediaFiles.length === 0) {
-                alert("Nenhuma mídia para exibir.");
+            if (imageFiles.length === 0) {
+                alert("Nenhuma imagem para exibir.");
                 return;
             }
             showNextMedia();
         }
     
-        document.getElementById('fullscreenBtn').addEventListener('click', function() {
+        document.getElementById('fullscreenBtn').addEventListener('click', function () {
             const elem = document.documentElement;
             if (!document.fullscreenElement) {
                 elem.requestFullscreen().catch(err => console.log(err));
@@ -155,9 +165,9 @@
             }
         });
     
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', async function () {
             await fetchImagesFromDrive();
         });
-    </script>    
+    </script>       
 </body>
 </html>
