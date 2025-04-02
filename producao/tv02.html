@@ -53,7 +53,7 @@
         let mediaIndex = 0;
     
         // Lista fixa de vídeos
-        const videoFiles = ["video01.mp4", "video02.mp4"];
+        const videoFiles = ["video01.mp4", "video02.mp4", "video03.mp4"];
         let videoIndex = 0;
     
         async function fetchImagesFromDrive() {
@@ -113,7 +113,7 @@
                     };
                     videoElement.style.display = "none";
     
-                    setTimeout(showNextMedia, 60000); // Exibe a imagem por 60 segundos
+                    setTimeout(showNextMedia, 2000); // Exibe a imagem por 60 segundos
     
                 } else {
                     // **Exibir um vídeo**
